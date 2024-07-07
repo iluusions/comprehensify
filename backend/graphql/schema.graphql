@@ -1,0 +1,18 @@
+type LevelContent {
+  tldr: String
+  topics: [TopicDetail]
+}
+
+type TopicDetail {
+  topic: String
+  detail: String
+}
+
+type DescriptionData {
+  currentLevel: Int
+  levelContent: [LevelContent]
+}
+
+type Query {
+  getDescriptions(userID: Int!, curTopic: String!): DescriptionData
+}
