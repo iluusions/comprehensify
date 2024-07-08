@@ -7,61 +7,62 @@ function App() {
   const [curTopic, setCurTopic] = useState(null); // Example topic
   const [currentLevel, setCurrentLevel] = useState(0);
   const [pageContent, setPageContent] = useState('');
+  const [initialData, setInitialData] = useState(null);
+  const [activeTabUrl, setActiveTabUrl] = useState('');
 
   useEffect(() => {
-    function getTextFromCurrentTab() {
-      chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
-        const activeTab = tabs[0];
-        const activeTabId = activeTab.id;
+    async function getTextFromCurrentTab() {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const activeTab = tabs[0];
+      const activeTabId = activeTab.id;
+      setActiveTabUrl(activeTab.url);
 
-        chrome.scripting.executeScript({
-          target: { tabId: activeTabId },
-          func: () => {
-            return document.title + document.body.innerText.substring(0, 1024);
-          },
-        }).then(results => {
-          setPageContent(results[0].result);
-          console.log(`PageContent: ${results[0].result}`);
-          // alert(`PageContent: ${results[0].result}`);
-        }).catch(error => {
-          console.error('Error injecting script:', error.message);
-        });
+      chrome.storage.local.get([activeTab.url], async (result) => {
+        if (result[activeTab.url]) {
+          const cachedData = result[activeTab.url];
+          setInitialData(cachedData.data);
+          setPageContent(cachedData.pageContent);
+          console.log(`Using cached data for URL: ${activeTab.url}`);
+        } else {
+          const results = await chrome.scripting.executeScript({
+            target: { tabId: activeTabId },
+            func: () => {
+              const title = document.title;
+              const innerText = document.body.innerText || "";
+              const outerText = document.body.outerText || "";
+
+              let combinedText = `${title}\n${innerText}\n${outerText}`;
+              const maxLength = 2000;
+              if (combinedText.length > maxLength) {
+                combinedText = `${title}\n${combinedText.substring(title.length + 1, maxLength)}`;
+              }
+              return combinedText;
+            },
+          });
+
+          const pageContent2 = results[0].result;
+          setPageContent(pageContent2);
+          setInitialData(null);
+        }
       });
     }
 
     // Ensure this runs once when the component mounts
     getTextFromCurrentTab();
-  }, []);
-
-  console.log(`Page Content: ${pageContent}`);
-  const data = DescriptionList({ userID, curTopic, pageContent });
-
-  if (!data) return null; // or a loading state
-
-  const changeLevel = (change) => {
-    setCurrentLevel(prevLevel => Math.min(Math.max(prevLevel + change, 0), 9));
-  };
-
-  console.log(data.getDescriptions);
-  const levelContent = data.getDescriptions.levelContent[currentLevel];
+  }, [userID, curTopic]);
 
   return (
     <div className="box">
       <div className="header">
         <div className="title">Information</div>
         <div className="controls">
-          <button className="button" disabled={currentLevel === 0} onClick={() => changeLevel(-1)}>-</button>
+          <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
           <span id="currentLevel">Level {currentLevel}</span>
-          <button className="button" disabled={currentLevel === 9} onClick={() => changeLevel(1)}>+</button>
+          <button className="button" disabled={currentLevel === 9} onClick={() => setCurrentLevel(prev => Math.min(prev + 1, 9))}>+</button>
         </div>
       </div>
       <div className="content">
-        <div id="tldr">{levelContent.tldr}</div>
-        <ul id="topics">
-          {levelContent.topics.map((topic, index) => (
-            <li key={index}>{topic.topic}: {topic.detail}</li>
-          ))}
-        </ul>
+        <DescriptionList userID={userID} curTopic={curTopic} pageContent={pageContent} initialData={initialData} activeTabUrl={activeTabUrl} currentLevel={currentLevel} />
       </div>
     </div>
   );
