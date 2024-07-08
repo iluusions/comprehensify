@@ -14,5 +14,5 @@ type DescriptionData {
 }
 
 type Query {
-  getDescriptions(userID: Int!, curTopic: String!): DescriptionData
+  getDescriptions(userID: Int!, curTopic: String, pageContent: String): DescriptionData
 }

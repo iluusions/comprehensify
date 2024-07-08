@@ -25,18 +25,21 @@ const typeDefs = gql`
   }
 
   type Query {
-    getDescriptions(userID: Int!, curTopic: String!): DescriptionData
+    getDescriptions(userID: Int!, curTopic: String, pageContent: String): DescriptionData
   }
 `;
 
 // Resolver
 const resolvers = {
   Query: {
-    getDescriptions: async (_, { userID, curTopic }) => {
-      // Log the curTopic and userID
+    getDescriptions: async (_, { userID, curTopic, pageContent }) => {
       console.log(`curTopic: ${curTopic}`);
       console.log(`userID: ${userID}`);
+      console.log(`pageContent: ${pageContent}`); // Log a snippet of the page content
 
+      if (!curTopic && !pageContent) {
+        throw new Error("curTopic and pageContent are both null!");
+      }
       try {
         // Retrieve user knowledge data from DynamoDB
         const genKnowledge = await getUserKnowledge(userID);
@@ -46,31 +49,65 @@ const resolvers = {
 
         // Construct the prompt for ChatGPT
         const knowledgePairs = Object.entries(genKnowledge).map(([topic, level]) => `${topic}: ${level}`).join(', ');
-        const prompt = `
-          I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. Could you please predict this user’s knowledge level for ${curTopic}? Return that level under the “currentLevel” field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
-          
-          const data = {
-            currentLevel: 1,
-            levelContent: {
-              1: {
-                tldr: "Quantum computing is like a super-powered computer that can solve some problems much faster than regular computers.",
-                topics: [
-                  { topic: "Qubit", detail: "The basic unit of quantum information, like a bit in regular computers but more powerful." },
-                  { topic: "Superposition", detail: "A qubit can be both 0 and 1 at the same time, unlike regular bits." },
-                  { topic: "Entanglement", detail: "A special connection between qubits that lets them share information instantly." },
-                  { topic: "Quantum Gate", detail: "A tool that changes the state of a qubit, like a switch for regular bits." },
-                  { topic: "Quantum Speedup", detail: "The ability of quantum computers to solve some problems faster than regular ones." }
-                ]
-              },
-              // Add level 2 to 10 as per the detailed format
-            }
-          };
+        let prompt;
 
-          GIVE ME ONLY THE JSON AND NOTHING ELSE.
-          GIVE IT IN A FORMAT THAT WILL ALLOW THE NEXT LINE IN MY CODE TO WORK (response is the chatGPT response):
-          const chatGPTData = JSON.parse(response.choices[0].message.content.trim());
-          GIVE ME THE RESPONSE IN PLAIN TEXT, NO FORMATTING, WITHOUT MARKDOWN
-        `;
+        if (curTopic) {
+          prompt = `
+            I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. Could you please predict this user’s knowledge level for ${curTopic}? Return that level under the “currentLevel” field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
+
+            const data = {
+              currentLevel: 1,
+              levelContent: {
+                1: {
+                  tldr: "Quantum computing is like a super-powered computer that can solve some problems much faster than regular computers.",
+                  topics: [
+                    { topic: "Qubit", detail: "The basic unit of quantum information, like a bit in regular computers but more powerful." },
+                    { topic: "Superposition", detail: "A qubit can be both 0 and 1 at the same time, unlike regular bits." },
+                    { topic: "Entanglement", detail: "A special connection between qubits that lets them share information instantly." },
+                    { topic: "Quantum Gate", detail: "A tool that changes the state of a qubit, like a switch for regular bits." },
+                    { topic: "Quantum Speedup", detail: "The ability of quantum computers to solve some problems faster than regular ones." }
+                  ]
+                },
+                // Add level 2 to 10 as per the detailed format
+              }
+            };
+
+            GIVE ME ONLY THE JSON AND NOTHING ELSE.
+            GIVE IT IN A FORMAT THAT WILL ALLOW THE NEXT LINE IN MY CODE TO WORK (response is the chatGPT response):
+            const chatGPTData = JSON.parse(response.choices[0].message.content.trim());
+            GIVE ME THE RESPONSE IN PLAIN TEXT, NO FORMATTING, WITHOUT MARKDOWN
+          `;
+        } else {
+          prompt = `
+            I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. The user is on a page that reads:
+            ${pageContent}
+            Based on the page content, could you generate a one to three word topic that summarizes the page? Then, using that topic phrase, predict this user’s knowledge level on that topic? Return that level under the “currentLevel” field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
+
+            const data = {
+              currentLevel: 1,
+              levelContent: {
+                1: {
+                  tldr: "Quantum computing is like a super-powered computer that can solve some problems much faster than regular computers.",
+                  topics: [
+                    { topic: "Qubit", detail: "The basic unit of quantum information, like a bit in regular computers but more powerful." },
+                    { topic: "Superposition", detail: "A qubit can be both 0 and 1 at the same time, unlike regular bits." },
+                    { topic: "Entanglement", detail: "A special connection between qubits that lets them share information instantly." },
+                    { topic: "Quantum Gate", detail: "A tool that changes the state of a qubit, like a switch for regular bits." },
+                    { topic: "Quantum Speedup", detail: "The ability of quantum computers to solve some problems faster than regular ones." }
+                  ]
+                },
+                // Add level 2 to 10 as per the detailed format
+              }
+            };
+
+            GIVE ME ONLY THE JSON AND NOTHING ELSE.
+            GIVE IT IN A FORMAT THAT WILL ALLOW THE NEXT LINE IN MY CODE TO WORK (response is the chatGPT response):
+            const chatGPTData = JSON.parse(response.choices[0].message.content.trim());
+            GIVE ME THE RESPONSE IN PLAIN TEXT, NO FORMATTING, WITHOUT MARKDOWN
+          `;
+        }
+
+        console.log(`Prompt: ${prompt}`);
 
         // Make a query to ChatGPT
         const response = await openai.chat.completions.create({
@@ -86,7 +123,6 @@ const resolvers = {
           presence_penalty: 0,
         });
 
-        // console.log(JSON.stringify(response));
         // Parse and format the response correctly
         const chatGPTData = JSON.parse(response.choices[0].message.content.trim());
 
