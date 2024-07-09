@@ -9,7 +9,7 @@ function App() {
   const [pageContent, setPageContent] = useState('');
   const [initialData, setInitialData] = useState(null);
   const [activeTabUrl, setActiveTabUrl] = useState('');
-  const [model, setModel] = useState('gpt-4o'); // Default model
+  const [model, setModel] = useState(null); // Default model is null initially
 
   useEffect(() => {
     async function getTextFromCurrentTab() {
@@ -46,9 +46,11 @@ function App() {
           setInitialData(null);
         }
 
-        // Set the model from storage if it exists
+        // Set the model from storage if it exists, otherwise default to GPT-4o
         if (result.model) {
           setModel(result.model);
+        } else {
+          setModel('gpt-4o');
         }
       });
     }
@@ -83,7 +85,17 @@ function App() {
         </div>
       </div>
       <div className="content">
-        <DescriptionList userID={userID} curTopic={curTopic} pageContent={pageContent} initialData={initialData} activeTabUrl={activeTabUrl} currentLevel={currentLevel} model={model} />
+        {model && (
+          <DescriptionList
+            userID={userID}
+            curTopic={curTopic}
+            pageContent={pageContent}
+            initialData={initialData}
+            activeTabUrl={activeTabUrl}
+            currentLevel={currentLevel}
+            model={model}
+          />
+        )}
       </div>
     </div>
   );
