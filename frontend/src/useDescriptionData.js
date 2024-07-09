@@ -1,11 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { GET_DESCRIPTIONS } from './queries';
 
-const useDescriptionData = (userID, curTopic, pageContent, initialData, activeTabUrl) => {
+const useDescriptionData = (userID, curTopic, pageContent, initialData, activeTabUrl, model) => {
   const skipQuery = !!initialData || !initialData && !(pageContent.length); // Skip the query if initialData is available
 
   const { loading, error, data } = useQuery(GET_DESCRIPTIONS, {
-    variables: { userID, curTopic, pageContent },
+    variables: { userID, curTopic, pageContent, model },
     skip: skipQuery, // Conditionally skip the query
     onCompleted: (fetchedData) => {
       // Update cache with new data
