@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { GET_DESCRIPTIONS } from './queries';
 
-const useDescriptionData = (userID, curTopic, pageContent, initialData, activeTabUrl, model) => {
+const useDescriptionData = (userID, curTopic, pageContent, initialData, activeTabUrl, model, setCurTopic) => {
   const skipQuery = !!initialData || !initialData && !(pageContent.length); // Skip the query if initialData is available
 
   const { loading, error, data } = useQuery(GET_DESCRIPTIONS, {
@@ -13,8 +13,10 @@ const useDescriptionData = (userID, curTopic, pageContent, initialData, activeTa
         const cachedData = result[activeTabUrl] || {};
         cachedData.pageContent = pageContent;
         cachedData.data = fetchedData;
+        cachedData.curTopic = fetchedData.getDescriptions.curTopic; // Cache curTopic
         chrome.storage.local.set({ [activeTabUrl]: cachedData });
       });
+      setCurTopic(fetchedData.getDescriptions.curTopic); // Update curTopic in the parent component
     }
   });
 

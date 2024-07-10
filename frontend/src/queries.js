@@ -11,6 +11,7 @@ export const GET_DESCRIPTIONS = gql`
           detail
         }
       }
+      curTopic
     }
   }
 `;

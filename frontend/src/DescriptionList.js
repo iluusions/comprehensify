@@ -1,10 +1,9 @@
 import React from 'react';
 import useDescriptionData from './useDescriptionData';
 
-const DescriptionList = ({ userID, curTopic, pageContent, initialData, activeTabUrl, currentLevel, model }) => {
-  const { loading, error, data } = useDescriptionData(userID, curTopic, pageContent, initialData, activeTabUrl, model);
+const DescriptionList = ({ userID, curTopic, setCurTopic, pageContent, initialData, activeTabUrl, currentLevel, model }) => {
+  const { loading, error, data } = useDescriptionData(userID, curTopic, pageContent, initialData, activeTabUrl, model, setCurTopic);
 
-  // console.log(`userID: ${userID}, curTopic: ${curTopic} pageContent: ${pageContent.length} initialData: ${initialData} model: ${model}`)
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error loading data</div>;
 

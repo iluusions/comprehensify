@@ -37,7 +37,6 @@ function App() {
     handleAuth();
   }, []);
 
-
   useEffect(() => {
     async function getTextFromCurrentTab() {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -50,6 +49,7 @@ function App() {
           const cachedData = result[activeTab.url];
           setInitialData(cachedData.data);
           setPageContent(cachedData.pageContent);
+          setCurTopic(cachedData.curTopic); // Set curTopic from cache
           console.log(`Using cached data for URL: ${activeTab.url}`);
         } else {
           const results = await chrome.scripting.executeScript({
@@ -71,6 +71,7 @@ function App() {
           const pageContent2 = results[0].result;
           setPageContent(pageContent2);
           setInitialData(null);
+          setCurTopic(null); // Reset curTopic when there's no cache
         }
 
         if (result.model) {
@@ -85,7 +86,7 @@ function App() {
     if (userID) {
       getTextFromCurrentTab();
     }
-  }, [userID, curTopic]);
+  }, [userID]);
 
   const handleModelChange = (e) => {
     const selectedModel = e.target.value;
@@ -96,7 +97,7 @@ function App() {
   return (
     <div className="box">
       <div className="header">
-        <div className="title">Information</div>
+        <div className="title">{curTopic || "Information"}</div>
         <div className="controls">
           <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
           <span id="currentLevel">Level {currentLevel}</span>
@@ -116,6 +117,7 @@ function App() {
           <DescriptionList
             userID={userID}
             curTopic={curTopic}
+            setCurTopic={setCurTopic} // Pass setCurTopic to DescriptionList
             pageContent={pageContent}
             initialData={initialData}
             activeTabUrl={activeTabUrl}

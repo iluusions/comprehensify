@@ -2,8 +2,9 @@ const { ApolloServer, gql } = require('apollo-server');
 const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
 const Groq = require('groq-sdk');
-const getUserKnowledge = require('../database/getUserKnowledge'); // Import the getUserKnowledge function
+const getUserKnowledge = require('../database/getUserKnowledge'); // Adjusted path for the actual file location
 const addUser = require('../database/addUser'); // Adjusted path for the actual file location
+const updateUserKnowledge = require('../database/updateUserKnowledge'); // Adjusted path for the actual file location
 
 // Initialize OpenAI, Anthropic, and Groq with your API keys
 const openai = new OpenAI({
@@ -33,6 +34,7 @@ const typeDefs = gql`
   type DescriptionData {
     currentLevel: Int
     levelContent: [LevelContent]
+    curTopic: String
   }
 
   type Query {
@@ -67,9 +69,10 @@ const resolvers = {
         if (curTopic) {
           prompt = `
             RESPONSE SHOULD BE JSON
-            I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. Could you please predict this user’s knowledge level for ${curTopic}? Return that level under the “currentLevel” field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
+            I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. Could you please predict this user’s knowledge level for ${curTopic}? Return that level under the “currentLevel” field of the return object shown below. Also return the curTopic under "curTopic". Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
 
             const data = {
+              curTopic: "Quantum Computing",
               currentLevel: 1,
               levelContent: {
                 1: {
@@ -90,7 +93,7 @@ const resolvers = {
             GIVE IT IN A FORMAT THAT WILL ALLOW THE NEXT LINE IN MY CODE TO WORK (response is the chatGPT response):
             const data = JSON.parse(response.choices[0].message.content.trim());
             GIVE ME THE RESPONSE IN PLAIN TEXT, NO FORMATTING, WITHOUT MARKDOWN
-            DONT INCLUDE A CURTOPIC FIELD
+            INCLUDE A curTopic FIELD
             ONLY JSON RESPONSE NO OTHER TEXT
           `;
         } else {
@@ -98,9 +101,10 @@ const resolvers = {
             RESPONSE SHOULD BE JSON
             I have user information regarding their knowledge levels in various topics. The topic-level pairings are as follows: {${knowledgePairs}}. The user is on a page that reads:
             ${pageContent}
-            Based on the page content, could you generate a one to three word topic that summarizes the page? Then, using that topic phrase, predict this user’s knowledge level on that topic? Return that level under the “currentLevel” field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
+            Based on the page content, could you generate a one to three word topic that summarizes the page? Then, using that topic phrase, predict this user’s knowledge level on that topic? Return that level under the “currentLevel” field of the return object shown below. Also return that generated topic under the "curTopic" field of the return object shown below. Also generate the content for each of the levels, under a nested dictionary called levelContent. Within level content, for each of the 10 levels (1-10 as the keys), there will be a summary (key is tldr) corresponding to a string of text as well as list of topics (key is topics). Within the topics list, there will be around 5 dictionaries, and in each dictionary there will be two elements, a topic corresponding to a string (key is topic) as well as details corresponding to another string related to the topic (key is detail). Can you create the data, where level 1 is at the knowledge of a third grader and level 10 is at the knowledge of a PhD grad, for the overall curTopic, making the TLDRs summarize the topic-detail pairs? This should be a JSON object under the name of “data”. Here is a sample where curTopic is quantum computing:
 
             const data = {
+              curTopic: "Quantum Computing",
               currentLevel: 1,
               levelContent: {
                 1: {
@@ -121,7 +125,7 @@ const resolvers = {
             GIVE IT IN A FORMAT THAT WILL ALLOW THE NEXT LINE IN MY CODE TO WORK (response is the chatGPT response):
             const data = JSON.parse(response.choices[0].message.content.trim());
             GIVE ME THE RESPONSE IN PLAIN TEXT, NO FORMATTING, WITHOUT MARKDOWN
-            DONT INCLUDE A CURTOPIC FIELD
+            INCLUDE A curTopic FIELD
             ONLY JSON RESPONSE NO OTHER TEXT
           `;
         }
@@ -158,6 +162,7 @@ const resolvers = {
               {
                 role: "system",
                 content: `JSON {
+                  "curTopic": "GPT-4",
                   "currentLevel": 4,
                   "levelContent": {
                   "1": {
@@ -281,6 +286,7 @@ const resolvers = {
         }
 
         let data;
+        // console.log(JSON.stringify(response));
 
         if (model === "gpt-4o") {
           data = JSON.parse(response.choices[0].message.content.trim());
@@ -295,9 +301,18 @@ const resolvers = {
           ...content
         }));
 
+        // Store curTopic and currentLevel into DynamoDB
+        const curTopicGenerated = data.curTopic;
+        const curLevel = data.currentLevel;
+
+        if (curTopicGenerated && curLevel != null) {
+          await updateUserKnowledge(userID, curTopicGenerated, curLevel);
+        }
+
         return {
           currentLevel: data.currentLevel,
-          levelContent: levelContent
+          levelContent: levelContent,
+          curTopic: curTopicGenerated
         };
       } catch (error) {
         console.error('Error fetching data from model:', error.message);
@@ -308,43 +323,8 @@ const resolvers = {
   }
 };
 
-// Create an instance of Express
-// const app = express();
-
-// Route to verify OAuth token
-// app.get('/verify-token', async (req, res) => {
-//   const token = req.headers.authorization;
-//   if (!token) {
-//     return res.status(401).send('Unauthorized: No token provided');
-//   }
-
-//   try {
-//     const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-//       headers: { Authorization: `Bearer ${token}` }
-//     }).then(response => response.json());
-
-//     if (userInfo.error) {
-//       return res.status(401).send('Unauthorized: Invalid token');
-//     }
-
-//     // You can now use userInfo.email as the userID
-//     res.status(200).send(userInfo);
-//   } catch (error) {
-//     res.status(500).send('Server error');
-//   }
-// });
-
-// Create and start the Apollo Server with Express
+// Create and start the Apollo Server
 const server = new ApolloServer({ typeDefs, resolvers });
-
-// server.start().then(res => {
-//   server.applyMiddleware({ app });
-
-//   const PORT = 4000;
-//   app.listen(PORT, () => {
-//     console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
-//   });
-// });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
