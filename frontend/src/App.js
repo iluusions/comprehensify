@@ -3,13 +3,40 @@ import './App.css';
 import DescriptionList from './DescriptionList';
 
 function App() {
-  const [userID, setUserID] = useState(1); // Example userID
-  const [curTopic, setCurTopic] = useState(null); // Example topic
+  const [userID, setUserID] = useState(null); // Updated to null initially
+  const [curTopic, setCurTopic] = useState(null);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [pageContent, setPageContent] = useState('');
   const [initialData, setInitialData] = useState(null);
   const [activeTabUrl, setActiveTabUrl] = useState('');
-  const [model, setModel] = useState(null); // Default model is null initially
+  const [model, setModel] = useState(null);
+
+  useEffect(() => {
+    async function handleAuth() {
+      try {
+        const token = await new Promise((resolve, reject) => {
+          chrome.identity.getAuthToken({ interactive: true }, (token) => {
+            if (chrome.runtime.lastError || !token) {
+              reject(new Error('Failed to get auth token'));
+              return;
+            }
+            resolve(token);
+          });
+        });
+
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(response => response.json());
+
+        setUserID(userInfo.email); // Use email as userID
+      } catch (error) {
+        console.error('Authentication failed', error);
+      }
+    }
+
+    handleAuth();
+  }, []);
+
 
   useEffect(() => {
     async function getTextFromCurrentTab() {
@@ -46,7 +73,6 @@ function App() {
           setInitialData(null);
         }
 
-        // Set the model from storage if it exists, otherwise default to GPT-4o
         if (result.model) {
           setModel(result.model);
         } else {
@@ -56,13 +82,14 @@ function App() {
     }
 
     // Ensure this runs once when the component mounts
-    getTextFromCurrentTab();
+    if (userID) {
+      getTextFromCurrentTab();
+    }
   }, [userID, curTopic]);
 
   const handleModelChange = (e) => {
     const selectedModel = e.target.value;
     setModel(selectedModel);
-    // Save the selected model to chrome.storage.local
     chrome.storage.local.set({ 'model': selectedModel });
   };
 

@@ -43,6 +43,6 @@ const updateUserKnowledge = async (userID, topic, level) => {
 };
 
 // Example usage:
-// updateUserKnowledge(1, 'Science', 8).catch(console.error);
+// updateUserKnowledge('example@example.com', 'Science', 8).catch(console.error);
 
 module.exports = updateUserKnowledge;

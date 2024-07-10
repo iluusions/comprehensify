@@ -3,6 +3,7 @@ const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
 const Groq = require('groq-sdk');
 const getUserKnowledge = require('../database/getUserKnowledge'); // Import the getUserKnowledge function
+const addUser = require('../database/addUser'); // Adjusted path for the actual file location
 
 // Initialize OpenAI, Anthropic, and Groq with your API keys
 const openai = new OpenAI({
@@ -35,7 +36,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    getDescriptions(userID: Int!, curTopic: String, pageContent: String, model: String!): DescriptionData
+    getDescriptions(userID: String!, curTopic: String, pageContent: String, model: String!): DescriptionData
   }
 `;
 
@@ -53,12 +54,14 @@ const resolvers = {
       try {
         // Retrieve user knowledge data from DynamoDB
         const genKnowledge = await getUserKnowledge(userID);
+        let knowledgePairs = null;
         if (!genKnowledge) {
-          throw new Error(`User with userID: ${userID} not found`);
+          await addUser(userID, "null", 0);
+        } else {
+          knowledgePairs = Object.entries(genKnowledge).map(([topic, level]) => `${topic}: ${level}`).join(', ');
         }
 
         // Construct the prompt
-        const knowledgePairs = Object.entries(genKnowledge).map(([topic, level]) => `${topic}: ${level}`).join(', ');
         let prompt;
 
         if (curTopic) {
@@ -122,8 +125,6 @@ const resolvers = {
             ONLY JSON RESPONSE NO OTHER TEXT
           `;
         }
-
-        // console.log(`Prompt: ${prompt}`);
 
         let response;
         if (model === "claude") {
@@ -279,15 +280,6 @@ const resolvers = {
           });
         }
 
-        // Log the full response for debugging
-        // console.log('Response from model:', JSON.stringify(response, null, 2));
-
-        // Check if the response contains the expected data
-        // if (!response.choices || !response.choices[0] || !response.choices[0].message || !response.choices[0].message.content || !response.content[0].text) {
-        //   throw new Error('Unexpected response format from model');
-        // }
-
-        // Parse and format the response correctly
         let data;
 
         if (model === "gpt-4o") {
@@ -298,7 +290,6 @@ const resolvers = {
           data = JSON.parse(response.choices[0].message.content.trim());
         }
 
-        // Ensure levelContent is an array
         const levelContent = Object.entries(data.levelContent).map(([level, content]) => ({
           level: parseInt(level, 10),
           ...content
@@ -310,14 +301,50 @@ const resolvers = {
         };
       } catch (error) {
         console.error('Error fetching data from model:', error.message);
+        console.error('Stacktraces:', error.stack);
         throw new Error('Failed to get descriptions from model');
       }
     }
   }
 };
 
-// Create and start the Apollo Server
+// Create an instance of Express
+// const app = express();
+
+// Route to verify OAuth token
+// app.get('/verify-token', async (req, res) => {
+//   const token = req.headers.authorization;
+//   if (!token) {
+//     return res.status(401).send('Unauthorized: No token provided');
+//   }
+
+//   try {
+//     const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+//       headers: { Authorization: `Bearer ${token}` }
+//     }).then(response => response.json());
+
+//     if (userInfo.error) {
+//       return res.status(401).send('Unauthorized: Invalid token');
+//     }
+
+//     // You can now use userInfo.email as the userID
+//     res.status(200).send(userInfo);
+//   } catch (error) {
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// Create and start the Apollo Server with Express
 const server = new ApolloServer({ typeDefs, resolvers });
+
+// server.start().then(res => {
+//   server.applyMiddleware({ app });
+
+//   const PORT = 4000;
+//   app.listen(PORT, () => {
+//     console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
+//   });
+// });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

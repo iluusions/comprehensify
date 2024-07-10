@@ -13,7 +13,7 @@ const params = {
   ],
   AttributeDefinitions: [
     { AttributeName: 'rowID', AttributeType: 'N' }, // Number type for rowID
-    { AttributeName: 'userID', AttributeType: 'N' } // Number type for userID
+    { AttributeName: 'userID', AttributeType: 'S' } // Number type for userID
   ],
   ProvisionedThroughput: {
     ReadCapacityUnits: 5,

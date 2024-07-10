@@ -5,8 +5,7 @@ const client = new DynamoDBClient({ region: 'us-west-2', endpoint: 'http://local
 const docClient = DynamoDBDocumentClient.from(client);
 
 const addNewUser = async (userID, topic, level) => {
-  // Get the current highest rowID to generate the next rowID
-
+  // Check if the userID (email) already exists
   const scanParamsIDCheck = {
     TableName: 'userInfo',
     FilterExpression: 'userID = :userID',
@@ -20,6 +19,7 @@ const addNewUser = async (userID, topic, level) => {
     throw new Error("User ID is already taken");
   }
 
+  // Get the current highest rowID to generate the next rowID
   const scanParams = {
     TableName: 'userInfo',
     ProjectionExpression: 'rowID'
@@ -45,6 +45,6 @@ const addNewUser = async (userID, topic, level) => {
 };
 
 // Example usage:
-// addNewUser(1, 'Mathematics', 7).catch(console.error);
+// addNewUser('example@example.com', 'Mathematics', 7).catch(console.error);
 
 module.exports = addNewUser;
