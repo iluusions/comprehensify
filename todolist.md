@@ -18,13 +18,22 @@
 5. **Cache Current Level** - MVP
    - Cache the `curLevel`.
 
-6. **Fix Loading Bug** - MVP
-   - Fix the bug where "LOADING" initially shows up when data is in cache.
+6. **Fix Double Query Bug** - MVP - Completed
+   - Fix the bug where the backend is queried twice even when data is in cache.
 
-7. **Fix JSON Formatting Bug** - MVP
+7. **Fix Loading Bug** - MVP - Completed
+   - Fix the bug where basic elements initially show up when data is in cache.
+
+8. **Fix Size Bug** - MVP - Completed
+   - Fix the bug where elements span multiple lines horizontally
+
+9. **Add Loading Screen** - MVP
+   - Add a loading animation (spinner, dots, etc)
+
+10. **Fix JSON Formatting Bug** - MVP
    - Ensure the JSON object from ChatGPT is always formatted correctly.
 
-8. **Cleanup** - MVP
+11. **Cleanup** - MVP
    - Refine the prompts for ChatGPT/models.
    - Improve HTML reading.
    - Remove unnecessary console.logs/alerts.

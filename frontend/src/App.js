@@ -10,6 +10,7 @@ function App() {
   const [initialData, setInitialData] = useState(null);
   const [activeTabUrl, setActiveTabUrl] = useState('');
   const [model, setModel] = useState(null);
+  const [cacheChecked, setCacheChecked] = useState(false);
 
   useEffect(() => {
     async function handleAuth() {
@@ -48,6 +49,7 @@ function App() {
         if (result[activeTab.url]) {
           const cachedData = result[activeTab.url];
           setInitialData(cachedData.data);
+          setCacheChecked(true);
           setPageContent(cachedData.pageContent);
           setCurTopic(cachedData.curTopic); // Set curTopic from cache
           console.log(`Using cached data for URL: ${activeTab.url}`);
@@ -94,10 +96,12 @@ function App() {
     chrome.storage.local.set({ 'model': selectedModel });
   };
 
-  return (
+  
+  return !cacheChecked ? <></> :
+  (
     <div className="box">
       <div className="header">
-        <div className="title">{curTopic || "Information"}</div>
+        <div className="title">{curTopic || "comprehensify"}</div>
         <div className="controls">
           <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
           <span id="currentLevel">Level {currentLevel + 1}</span>
