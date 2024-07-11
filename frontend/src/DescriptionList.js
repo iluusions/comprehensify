@@ -1,10 +1,11 @@
 import React from 'react';
 import useDescriptionData from './useDescriptionData';
+import LoadingSpinner from './LoadingSpinner';
 
 const DescriptionList = ({ userID, curTopic, setCurTopic, pageContent, initialData, setInitialData, activeTabUrl, currentLevel, model }) => {
   const { loading, error, data } = useDescriptionData(userID, curTopic, pageContent, initialData, setInitialData, activeTabUrl, model, setCurTopic);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <LoadingSpinner />;
   if (error) return <div>Error loading data</div>;
 
   if (!data) return null;

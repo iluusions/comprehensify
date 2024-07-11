@@ -13,7 +13,6 @@ const useDescriptionData = (userID, curTopic, pageContent, initialData, setIniti
         const cachedData = result[activeTabUrl] || {};
         cachedData.pageContent = pageContent;
         cachedData.data = fetchedData;
-        cachedData.curTopic = fetchedData.getDescriptions.curTopic; // Cache curTopic
         chrome.storage.local.set({ [activeTabUrl]: cachedData });
       });
       setInitialData(fetchedData);

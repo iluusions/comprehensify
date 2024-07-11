@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import DescriptionList from './DescriptionList';
+import LevelDisplay from './LevelDisplay';
 
 function App() {
   const [userID, setUserID] = useState(null); // Updated to null initially
@@ -49,9 +50,9 @@ function App() {
         if (result[activeTab.url]) {
           const cachedData = result[activeTab.url];
           setInitialData(cachedData.data);
-          setCacheChecked(true);
           setPageContent(cachedData.pageContent);
-          setCurTopic(cachedData.curTopic); // Set curTopic from cache
+          setCurTopic(cachedData.data.getDescriptions.curTopic); // Set curTopic from cache
+          setCurrentLevel(cachedData.data.getDescriptions.currentLevel);
           console.log(`Using cached data for URL: ${activeTab.url}`);
         } else {
           const results = await chrome.scripting.executeScript({
@@ -82,6 +83,7 @@ function App() {
           setModel('gpt-4o');
         }
       });
+      setCacheChecked(true);
     }
 
     // Ensure this runs once when the component mounts
@@ -102,18 +104,25 @@ function App() {
     <div className="box">
       <div className="header">
         <div className="title">{curTopic || "comprehensify"}</div>
-        <div className="controls">
-          <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
-          <span id="currentLevel">Level {currentLevel + 1}</span>
-          <button className="button" disabled={currentLevel === 9} onClick={() => setCurrentLevel(prev => Math.min(prev + 1, 9))}>+</button>
-        </div>
-        <div className="model-selector">
-          <label htmlFor="model">Model:</label>
-          <select id="model" value={model} onChange={handleModelChange}>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="claude">Claude</option>
-            <option value="llama">LLaMA</option>
-          </select>
+        <div className='controlsnmodel'>
+          <div className="controls">
+            <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
+            <LevelDisplay
+              userID={userID}
+              curTopic={curTopic}
+              currentLevel={currentLevel}
+              activeTabUrl={activeTabUrl}
+            />
+            <button className="button" disabled={currentLevel === 9} onClick={() => setCurrentLevel(prev => Math.min(prev + 1, 9))}>+</button>
+          </div>
+          <div className="model-selector">
+            <label htmlFor="model">Model:</label>
+            <select id="model" value={model} onChange={handleModelChange}>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="claude">Claude</option>
+              <option value="llama">LLaMA</option>
+            </select>
+          </div>
         </div>
       </div>
       <div className="content">

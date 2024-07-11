@@ -40,11 +40,19 @@ body {
   font-size: 1.5em;
   font-weight: bold;
   color: #333;
+  /* border: 1px solid red; */
 }
 
 .controls {
   display: flex;
   align-items: center;
+  /* border: 1px solid red; */
+  margin-right: 4vw;  
+}
+
+.controlsnmodel {
+  display:flex;
+  /* border: 1px solid red; */
 }
 
 .button {
@@ -56,6 +64,8 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  /* min-width: 50px; Ensure the buttons have a minimum width */
+  text-align: center;
 }
 
 .button:hover {
@@ -93,6 +103,11 @@ body {
   border-bottom: none;
 }
 
+#currentLevel {
+  min-width: 48px;
+  text-align: center;
+}
+
 .model-selector {
   display: flex;
   align-items: center;
@@ -106,4 +121,6 @@ body {
   padding: 5px;
   border-radius: 4px;
   border: 1px solid #ccc;
+  /* min-width: 100px; Ensure the select box has a minimum width */
 }
+

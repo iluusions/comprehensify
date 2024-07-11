@@ -15,7 +15,7 @@
 4. **Use Current Topic as Title/Header** - Completed
    - Use the `curTopic` as the title/header.
 
-5. **Cache Current Level** - MVP
+5. **Cache Current Level** - MVP - Completed
    - Cache the `curLevel`.
 
 6. **Fix Double Query Bug** - MVP - Completed
@@ -27,7 +27,7 @@
 8. **Fix Size Bug** - MVP - Completed
    - Fix the bug where elements span multiple lines horizontally
 
-9. **Add Loading Screen** - MVP
+9. **Add Loading Screen** - MVP - Completed
    - Add a loading animation (spinner, dots, etc)
 
 10. **Fix JSON Formatting Bug** - MVP

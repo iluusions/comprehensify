@@ -40,15 +40,29 @@ const typeDefs = gql`
   type Query {
     getDescriptions(userID: String!, curTopic: String, pageContent: String, model: String!): DescriptionData
   }
+
+  type Mutation {
+    updateLevel(userID: String!, curTopic: String!, currentLevel: Int!): Int
+  }
 `;
 
 // Resolver
 const resolvers = {
+  Mutation: {
+    updateLevel: async (_, { userID, curTopic, currentLevel }) => {
+      console.log(`Updating user level: ${userID}'s level in ${curTopic} is now ${currentLevel}`);
+      return updateUserKnowledge(userID, curTopic, currentLevel).then(() => {
+        return currentLevel;
+      })
+    }
+  },
+
   Query: {
+
     getDescriptions: async (_, { userID, curTopic, pageContent, model }) => {
-      console.log(`curTopic: ${curTopic}`);
-      console.log(`userID: ${userID}`);
-      console.log(`model: ${model}`);
+      // console.log(`curTopic: ${curTopic}`);
+      // console.log(`userID: ${userID}`);
+      // console.log(`model: ${model}`);
 
       if (!curTopic && !pageContent) {
         throw new Error("curTopic and pageContent are both null!");

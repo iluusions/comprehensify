@@ -15,3 +15,9 @@ export const GET_DESCRIPTIONS = gql`
     }
   }
 `;
+
+export const UPDATE_LEVEL = gql`
+  mutation UpdateLevel($userID: String!, $curTopic: String!, $currentLevel: Int!) {
+    updateLevel(userID: $userID, curTopic: $curTopic, currentLevel: $currentLevel)
+  }
+`;
