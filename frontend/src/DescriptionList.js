@@ -1,8 +1,8 @@
 import React from 'react';
 import useDescriptionData from './useDescriptionData';
 
-const DescriptionList = ({ userID, curTopic, setCurTopic, pageContent, initialData, activeTabUrl, currentLevel, model }) => {
-  const { loading, error, data } = useDescriptionData(userID, curTopic, pageContent, initialData, activeTabUrl, model, setCurTopic);
+const DescriptionList = ({ userID, curTopic, setCurTopic, pageContent, initialData, setInitialData, activeTabUrl, currentLevel, model }) => {
+  const { loading, error, data } = useDescriptionData(userID, curTopic, pageContent, initialData, setInitialData, activeTabUrl, model, setCurTopic);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error loading data</div>;

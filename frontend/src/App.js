@@ -100,7 +100,7 @@ function App() {
         <div className="title">{curTopic || "Information"}</div>
         <div className="controls">
           <button className="button" disabled={currentLevel === 0} onClick={() => setCurrentLevel(prev => Math.max(prev - 1, 0))}>-</button>
-          <span id="currentLevel">Level {currentLevel}</span>
+          <span id="currentLevel">Level {currentLevel + 1}</span>
           <button className="button" disabled={currentLevel === 9} onClick={() => setCurrentLevel(prev => Math.min(prev + 1, 9))}>+</button>
         </div>
         <div className="model-selector">
@@ -120,6 +120,7 @@ function App() {
             setCurTopic={setCurTopic} // Pass setCurTopic to DescriptionList
             pageContent={pageContent}
             initialData={initialData}
+            setInitialData={setInitialData}
             activeTabUrl={activeTabUrl}
             currentLevel={currentLevel}
             model={model}
