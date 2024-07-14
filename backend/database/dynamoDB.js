@@ -1,19 +1,17 @@
-const { DynamoDBClient, CreateTableCommand, KeyType } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 
 const client = new DynamoDBClient({
   region: 'us-west-2',
-  endpoint: 'http://localhost:8000' // Local DynamoDB instance
+  endpoint: 'http://localhost:8000' // Adjust for production environment
 });
 
 const params = {
   TableName: 'userInfo',
   KeySchema: [
-    { AttributeName: 'rowID', KeyType: 'HASH' }, // Partition key
-    { AttributeName: 'userID', KeyType: 'RANGE' } // Sort key
+    { AttributeName: 'userID', KeyType: 'HASH' } // Partition key
   ],
   AttributeDefinitions: [
-    { AttributeName: 'rowID', AttributeType: 'N' }, // Number type for rowID
-    { AttributeName: 'userID', AttributeType: 'S' } // Number type for userID
+    { AttributeName: 'userID', AttributeType: 'S' } // String type for userID
   ],
   ProvisionedThroughput: {
     ReadCapacityUnits: 5,

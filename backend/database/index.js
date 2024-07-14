@@ -4,9 +4,9 @@ const getUserKnowledge = require('./getUserKnowledge');
 
 (async () => {
   try {
-    await addNewUser('example@example.com', 'History', 7);
-    await updateUserKnowledge('example@example.com', 'Science', 2);
-    await getUserKnowledge('example@example.com');
+    await addNewUser('ssidharth.tho@gmail.com', 'History', 4);
+    await updateUserKnowledge('ssidharth.tho@gmail.com', 'Science', 6);
+    await getUserKnowledge('ssidharth.tho@gmail.com');
   } catch (err) {
     console.error(err);
   }

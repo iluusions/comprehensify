@@ -1,42 +1,30 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const client = new DynamoDBClient({ region: 'us-west-2', endpoint: 'http://localhost:8000' });
 const docClient = DynamoDBDocumentClient.from(client);
 
 const getUserKnowledge = async (userID) => {
-  // Find the rowID for the given userID
-  const scanParams = {
-    TableName: 'userInfo',
-    FilterExpression: 'userID = :userID',
-    ExpressionAttributeValues: {
-      ':userID': userID
+    const getParams = {
+        TableName: 'userInfo',
+        Key: {
+            'userID': userID
+        },
+        ProjectionExpression: 'genKnowledge'
+    };
+
+    try {
+        const result = await docClient.send(new GetCommand(getParams));
+        if (!result.Item) {
+            console.log(`User with userID: ${userID} not found`);
+            return;
+        }
+        console.log('User genKnowledge:', result.Item.genKnowledge);
+        return result.Item.genKnowledge;
+    } catch (error) {
+        console.error(`Failed to get user knowledge for userID: ${userID}`, error);
+        throw error;
     }
-  };
-
-  const scanResult = await docClient.send(new ScanCommand(scanParams));
-  if (scanResult.Items.length === 0) {
-    console.error(`User with userID: ${userID} not found`);
-    return;
-  }
-  
-  const rowID = scanResult.Items[0].rowID;
-
-  const getParams = {
-    TableName: 'userInfo',
-    Key: {
-      'rowID': rowID,
-      'userID': userID
-    },
-    ProjectionExpression: 'genKnowledge'
-  };
-
-  const result = await docClient.send(new GetCommand(getParams));
-  console.log('User genKnowledge:', result.Item.genKnowledge);
-  return result.Item.genKnowledge;
 };
-
-// Example usage:
-// getUserKnowledge(1).catch(console.error);
 
 module.exports = getUserKnowledge;
