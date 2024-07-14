@@ -82,8 +82,8 @@ function App() {
         } else {
           setModel('gpt-4o');
         }
+        setCacheChecked(true);
       });
-      setCacheChecked(true);
     }
 
     // Ensure this runs once when the component mounts
@@ -136,6 +136,7 @@ function App() {
             setInitialData={setInitialData}
             activeTabUrl={activeTabUrl}
             currentLevel={currentLevel}
+            setCurrentLevel={setCurrentLevel}
             model={model}
           />
         )}
