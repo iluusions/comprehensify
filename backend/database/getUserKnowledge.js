@@ -1,7 +1,7 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
-const client = new DynamoDBClient({ region: 'us-west-2', endpoint: 'http://localhost:8000' });
+const client = new DynamoDBClient({ region: 'us-west-1', endpoint: process.env.DATABASE });
 const docClient = DynamoDBDocumentClient.from(client);
 
 const getUserKnowledge = async (userID) => {

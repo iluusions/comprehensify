@@ -1,8 +1,8 @@
 const { DynamoDBClient, DeleteTableCommand, DescribeTableCommand } = require('@aws-sdk/client-dynamodb');
 
 const client = new DynamoDBClient({
-  region: 'us-west-2',
-  endpoint: 'http://localhost:8000' // Adjust this as needed
+  region: 'us-west-1',
+  endpoint: process.env.DATABASE // Adjust this as needed
 });
 
 async function clearAndDeleteTable(tableName) {

@@ -1,8 +1,8 @@
 const { DynamoDBClient, CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 
 const client = new DynamoDBClient({
-  region: 'us-west-2',
-  endpoint: 'http://localhost:8000' // Adjust for production environment
+  region: 'us-west-1',
+  endpoint: process.env.DATABASE // Adjust for production environment
 });
 
 const params = {

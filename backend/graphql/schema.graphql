@@ -1,18 +1,23 @@
-type LevelContent {
-  tldr: String
-  topics: [TopicDetail]
-}
-
 type TopicDetail {
   topic: String
   detail: String
 }
 
+type LevelContent {
+  tldr: String
+  topics: [TopicDetail]
+}
+
 type DescriptionData {
   currentLevel: Int
   levelContent: [LevelContent]
+  curTopic: String
 }
 
 type Query {
-  getDescriptions(userID: Int!, curTopic: String, pageContent: String): DescriptionData
+  getDescriptions(userID: String!, curTopic: String, pageContent: String, model: String!): DescriptionData
+}
+
+type Mutation {
+  updateLevel(userID: String!, curTopic: String!, currentLevel: Int!): Int
 }
