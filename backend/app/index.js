@@ -327,9 +327,10 @@ GIVE ME ONLY THE JSON AND NOTHING ELSE, NO OTHER TEXT. GIVE ME THE RESPONSE IN P
   }
 };
 
+const port = process.env.PORT || 4000;
 // Create and start the Apollo Server
 const server = new ApolloServer({ typeDefs, resolvers });
 
-server.listen().then(({ url }) => {
+server.listen(port).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });

@@ -1,7 +1,7 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 
-const client = new DynamoDBClient({ region: 'us-west-1', endpoint: process.env.DATABASE });
+const client = new DynamoDBClient({ region: 'us-west-1', endpoint: process.env.DATABASE || undefined });
 const docClient = DynamoDBDocumentClient.from(client);
 
 const addNewUser = async (userID, topic, level) => {

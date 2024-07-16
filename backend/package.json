@@ -1,6 +1,6 @@
 {
   "name": "comprehensify-backend",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
     "@aws-sdk/client-dynamodb": "^3.609.0",

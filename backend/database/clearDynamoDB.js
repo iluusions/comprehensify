@@ -2,7 +2,7 @@ const { DynamoDBClient, DeleteTableCommand, DescribeTableCommand } = require('@a
 
 const client = new DynamoDBClient({
   region: 'us-west-1',
-  endpoint: process.env.DATABASE // Adjust this as needed
+  endpoint: process.env.DATABASE || undefined // Adjust this as needed
 });
 
 async function clearAndDeleteTable(tableName) {
