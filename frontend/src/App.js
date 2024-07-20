@@ -80,7 +80,7 @@ function App() {
         if (result.model) {
           setModel(result.model);
         } else {
-          setModel('gpt-4o');
+          setModel('4o-mini');
         }
         setCacheChecked(true);
       });
@@ -118,6 +118,7 @@ function App() {
           <div className="model-selector">
             <label htmlFor="model">Model:</label>
             <select id="model" value={model} onChange={handleModelChange}>
+              <option value="4o-mini">GPT-4o-Mini</option>
               <option value="gpt-4o">GPT-4o</option>
               <option value="claude">Claude</option>
               <option value="llama">LLaMA</option>

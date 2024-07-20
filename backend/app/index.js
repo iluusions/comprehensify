@@ -62,7 +62,7 @@ const resolvers = {
     getDescriptions: async (_, { userID, curTopic, pageContent, model }) => {
       // console.log(`curTopic: ${curTopic}`);
       // console.log(`userID: ${userID}`);
-      // console.log(`model: ${model}`);
+      console.log(`model: ${model}`);
 
       if (!curTopic && !pageContent) {
         throw new Error("curTopic and pageContent are both null!");
@@ -134,6 +134,8 @@ GIVE ME ONLY THE JSON AND NOTHING ELSE, NO OTHER TEXT. GIVE ME THE RESPONSE IN P
           `;
         }
 
+        console.log(prompt);
+
         let response;
         if (model === "claude") {
           response = await anthropic.messages.create({
@@ -150,6 +152,19 @@ GIVE ME ONLY THE JSON AND NOTHING ELSE, NO OTHER TEXT. GIVE ME THE RESPONSE IN P
         } else if (model === "gpt-4o") {
           response = await openai.chat.completions.create({
             model: "gpt-4o",
+            messages: [
+              { role: "system", content: "You are a helpful assistant." },
+              { role: "user", content: prompt }
+            ],
+            max_tokens: 3000,
+            temperature: 1,
+            top_p: 1,
+            frequency_penalty: 0,
+            presence_penalty: 0,
+          });
+        } else if (model === "4o-mini") {
+          response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
             messages: [
               { role: "system", content: "You are a helpful assistant." },
               { role: "user", content: prompt }
@@ -293,6 +308,8 @@ GIVE ME ONLY THE JSON AND NOTHING ELSE, NO OTHER TEXT. GIVE ME THE RESPONSE IN P
         // console.log(JSON.stringify(response));
 
         if (model === "gpt-4o") {
+          data = JSON.parse(response.choices[0].message.content.trim());
+        } else if (model === "4o-mini") {
           data = JSON.parse(response.choices[0].message.content.trim());
         } else if (model === "claude") {
           data = JSON.parse(response.content[0].text.trim());
